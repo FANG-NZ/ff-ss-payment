@@ -1,0 +1,65 @@
+name: FF_Payment
+---
+
+# FF Payment controller
+Director:
+  rules:
+    'payment//$Action/$MethodName/$PaymentID': 'PaymentProcessor_GatewayHosted'
+
+
+# FF Payment processor
+# define the payment name
+FF_PaymentProcessor:
+    supported_methods:
+        dev:
+            - 'PaymentExpressPxPay'
+            - 'PaymentExpressPxPost'
+            - 'PoliPayment'
+        test:
+            - 'PaymentExpressPxPay'
+            - 'PaymentExpressPxPost'
+            - 'PoliPayment'
+        live:
+            - 'PaymentExpressPxPay'
+            - 'PaymentExpressPxPost'
+            - 'PoliPayment'
+      
+            
+# FF Payment PaymentFactory
+# according to payment name define the payment gateway
+FF_PaymentFactory:
+    
+    # method 1
+    PaymentExpressPxPay:
+        title: 'Payment Express PxPay'
+        
+        gateway_classes:
+            live: 'PaymentExpressGateway_PxPay'
+            dev:  'PaymentExpressGateway_PxPay'
+            test: 'PaymentExpressGateway_PxPay_Mock'
+            
+        processor: 'FF_PaymentProcessor_GatewayHosted'
+        model: 'FF_Payment'
+        
+    # method 2
+    PaymentExpressPxPost:
+        title: 'Payment Express PxPost'
+        
+        gateway_classes:
+            live: 'PaymentExpressGateway_PxPost'
+            dev:  'PaymentExpressGateway_PxPost'
+            test: 'PaymentExpressGateway_PxPost'
+            
+        processor: 'FF_PaymentProcessor_MerchantHosted'
+        model: 'FF_Payment'
+        
+    # method 3
+    PoliPayment:
+        title: 'Poli Payment'
+        gateway_classes:
+            live: 'PoliPaymentGateway'
+            dev:  'PoliPaymentGateway'
+            test: 'PoliPaymentGateway'
+        processor: 'PaymentProcessor_GatewayHosted'
+        model: 'FF_Payment'
+        

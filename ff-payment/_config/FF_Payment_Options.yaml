@@ -1,0 +1,21 @@
+name: FF_Payment_Options
+---
+
+# DPS PxPost
+PaymentExpressGateway_PxPost:
+        
+    live:
+        authentication:
+            user_name: 'InfoSiteLtd1312'
+            password: '1qaz@WSX3edc'
+
+    test:
+        authentication:
+            user_name: 'InfoSiteLtd_Dev'
+            password: 'test12344'
+
+    dev:
+        url: 'https://uat.paymentexpress.com/pxpost.aspx'
+        authentication:
+            user_name: 'InfoSiteLtd_Dev0451'
+            password: 'test1234'
