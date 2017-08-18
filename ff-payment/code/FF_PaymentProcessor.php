@@ -97,11 +97,11 @@ class FF_PaymentProcessor extends Controller {
      * @param String $url
      */
     public function setRedirectURL($url) {
-            Session::set('FF_Payment.PostRedirectionURL', $url);
+        Session::set('FF_Payment.RedirectionURL', $url);
     }
 
     public function getRedirectURL() {
-            return Session::get('FF_Payment.PostRedirectionURL');
+        return Session::get('FF_Payment.RedirectionURL');
     }
 
     /**
@@ -157,36 +157,15 @@ class FF_PaymentProcessor extends Controller {
         $validation = $this->gateway->validate($this->paymentData);
 
         if (! $validation->valid()) {
+            
             // Use the exception message to identify this is a validation exception
             // Payment pages can call gateway->getValidationResult() to get all the
             // validation error messages
+            Debug::show($validation->messageList());
+            
             throw new Exception("Validation Exception");
         }
     }
-
-	/**
-	 * Get the processor's form fields. Custom controllers use this function
-	 * to add the form fields specifically to gateways.
-	 *
-	 * @return FieldList
-	 */
-//	public function getFormFields() {
-//		$fieldList = new FieldList();
-//
-//		$fieldList->push(new NumericField('Amount', 'Amount', ''));
-//		$fieldList->push(new DropDownField('Currency', 'Select currency :', $this->gateway->getSupportedCurrencies()));
-//
-//		return $fieldList;
-//	}
-
-	/**
-	 * Get the form requirements
-	 *
-	 * @return RequiredFields
-	 */
-//	public function getFormRequirements() {
-//		return new RequiredFields('Amount', 'Currency');
-//	}
         
         
     /**
@@ -215,9 +194,10 @@ class FF_PaymentProcessor_MerchantHosted extends FF_PaymentProcessor {
     public function capture($data) {
         parent::capture($data);
 
-        Debug::show("I'm here");
-        
+       
+        //call gateway process
         $result = $this->gateway->process($this->paymentData, $this->payment);
+        //To update payment
         $this->payment->updateStatus($result);
 
         // Do redirection
@@ -228,6 +208,8 @@ class FF_PaymentProcessor_MerchantHosted extends FF_PaymentProcessor {
 
 
 
+
+
 /**
  * SUB CLASS of FF_PaymentProcessor
  * The Gateway Hosted extends from FF PaymentProcessor
@@ -235,6 +217,50 @@ class FF_PaymentProcessor_MerchantHosted extends FF_PaymentProcessor {
  */
 class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
     
+    private static $allowed_actions = array(
+        'complete',
+        'cancel'
+    );
+    
+    
+    /**
+     * Process a gateway-hosted payment. Users will be redirected to
+     * the external gateway to enter payment info. Redirect back to
+     * our site when the payment is completed.
+     *
+     * @see PaymentProcessor::capture()
+     */
+    public function capture($data) {
+        parent::capture($data);
+        
+        Debug::show("I'm here");die;
+    }
+    
+    
+    
+    /**
+     * Process request from the external gateway, this action is usually triggered if the payment was completed on the gateway 
+     * and the user was redirected to the returnURL.
+     * 
+     * The request is passed to the gateway so that it can process the request and use a mechanism to check the status of the payment.
+     *
+     * @param SS_HTTPResponse $request
+     */
+    public function complete($request) {
+        // Reconstruct the payment object
+        $this->payment = Payment::get()->byID($request->param('OtherID'));
+
+        // Reconstruct the gateway object
+        $methodName = $request->param('ID');
+        $this->gateway = PaymentFactory::get_gateway($methodName);
+
+        // Query the gateway for the payment result
+        $result = $this->gateway->check($request);
+        $this->payment->updateStatus($result);
+
+        // Do redirection
+        $this->doRedirect();
+    }
     
     
 }

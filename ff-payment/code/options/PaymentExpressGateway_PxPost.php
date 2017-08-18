@@ -13,8 +13,6 @@
  */
 class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
     
-    //define the request url
-    protected static $url;
     
     /**
      * @config
@@ -23,6 +21,11 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
     protected static $pxpost_username;
     protected static $pxpost_password;
     
+    
+    /**
+     * @config
+     * @var type 
+     */
     protected $supportedCurrencies = array(
         'NZD' => 'New Zealand Dollar',
         'USD' => 'United States Dollar',
@@ -38,15 +41,24 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
      * Function is to setup default setting
      */
     private function onBeforeProcess(){
-        
         $config = $this->getConfig();
         
+        //TODO
+        //setup username
         if(!self::$pxpost_username){
             self::$pxpost_username = $config['authentication']['user_name'];
         }
         
+        //TODO
+        //setup password
         if(!self::$pxpost_password){
             self::$pxpost_password = $config['authentication']['password'];
+        }
+        
+        //TODO
+        //setup url
+        if(!$this->gatewayURL){
+            $this->gatewayURL = $config['url'];
         }
         
     }
@@ -60,8 +72,8 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
         $this->onBeforeProcess();
         
         //clear data
-        unset($data["Status"]);
-        unset($data["CreditCardType"]);
+        //unset($data["Status"]);
+        //unset($data["CreditCardType"]);
         
         // Main Settings
         //$inputs = array();
@@ -69,13 +81,13 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
         $data['PostPassword'] = self::$pxpost_password;
         //$inputs = array();
         
-        $data["CardHolderName"] = $data["LastName"] . " " . $data["FirstName"];
-        unset($data["FirstName"]);
-        unset($data["LastName"]);
-        
-        $data["DateExpiry"] = $data["MonthExpiry"] . $data["YearExpiry"];
-        unset($data["MonthExpiry"]);
-        unset($data["YearExpiry"]);
+//        $data["CardHolderName"] = $data["LastName"] . " " . $data["FirstName"];
+//        unset($data["FirstName"]);
+//        unset($data["LastName"]);
+//        
+//        $data["DateExpiry"] = $data["MonthExpiry"] . $data["YearExpiry"];
+//        unset($data["MonthExpiry"]);
+//        unset($data["YearExpiry"]);
         
         $data["TxnType"] = "Purchase";
         
@@ -83,17 +95,17 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
         $transaction = "<Txn>";
         foreach ($data as $name => $value) {
             
-            if ($name == "Amount") {
-                $value = number_format($value, 2, '.', '');
-            }
-            
-            if($name == "Reference"){
-                $name = "MerchantReference";
-            }
-            
-            if($name == "Currency"){
-                $name = "InputCurrency";
-            }
+//            if ($name == "Amount") {
+//                $value = number_format($value, 2, '.', '');
+//            }
+//            
+//            if($name == "Reference"){
+//                $name = "MerchantReference";
+//            }
+//            
+//            if($name == "Currency"){
+//                $name = "InputCurrency";
+//            }
             
             
             $XML_name = Convert::raw2xml($name);
@@ -101,8 +113,6 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
             $transaction .= "<$XML_name>$XML_value</$XML_name>";
         }
         $transaction .= "</Txn>";
-
-        
         
         //To send request
         $resultXml = $this->post($transaction);
@@ -110,10 +120,11 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
         $result = $this->parserXML($resultXml);
         
         
+        
         if ($result['SUCCESS']) {
-            return new PaymentGateway_Success();
+            return new FF_PaymentGateway_Success($result);
         }else{
-            return new PaymentGateway_Failure();
+            return new FF_PaymentGateway_Failure($result);
         }
     }
     
@@ -166,7 +177,7 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
      */
     private function post($data){
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, self::$pxpost_url);
+        curl_setopt($ch, CURLOPT_URL, $this->gatewayURL);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

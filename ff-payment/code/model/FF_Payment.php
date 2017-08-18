@@ -55,7 +55,7 @@ class FF_Payment extends DataObject {
      * @param PaymentGateway_Result Result from the payment gateway after processing
      * @return Int Payment ID
      */
-    public function updateStatus(PaymentGateway_Result $result) {
+    public function updateStatus(FF_PaymentGateway_Result $result) {
         
         //Use the gateway result to update the payment
         $this->Status = $result->getStatus();

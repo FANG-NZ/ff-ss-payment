@@ -11,7 +11,7 @@
  *
  * @author Fang
  */
-class FF_PaymentGateway {
+abstract class FF_PaymentGateway {
     
     /**
      * The gateway url
@@ -20,6 +20,16 @@ class FF_PaymentGateway {
      * @var String
      */
     protected $gatewayURL;
+    
+    
+    /**
+     * Object holding the result from gateway
+     *
+     * @var FF_PaymentGateway_Result
+     */
+    protected $gatewayResult;
+
+
 
     /**
      * Object holding the gateway validation result
@@ -28,12 +38,6 @@ class FF_PaymentGateway {
      */
     private $validationResult;
 
-    /**
-     * Object holding the result from gateway
-     *
-     * @var PaymentGateway_Result
-     */
-    private $gatewayResult;
 
     /**
      * Supported credit card types for this gateway
@@ -119,6 +123,16 @@ class FF_PaymentGateway {
     
     
     /**
+     * Get the response from gateway
+     * @return type
+     */
+    public function getResponse(){
+        return $this->response;
+    }
+    
+    
+    
+    /**
      * Validate the payment data against the gateway-specific requirements
      *
      * @param Array $data
@@ -152,15 +166,14 @@ class FF_PaymentGateway {
     
     
     /**
+     * ABSTRACT
      * Send a request to the gateway to process the payment.
      * To be implemented by individual gateways
      *
      * @param Array $data
      * @return PaymentGateway_Result
      */
-    public function process($data, $payment) {
-        return new FF_PaymentGateway_Success();
-    }
+    abstract public function process($data, $payment); 
     
 }
 
@@ -169,9 +182,8 @@ class FF_PaymentGateway {
 /**
  * Parent class for all merchant-hosted gateways
  */
-class FF_PaymentGateway_MerchantHosted extends FF_PaymentGateway { 
-
-    
+abstract class FF_PaymentGateway_MerchantHosted extends FF_PaymentGateway { 
+    /* THIS IS FOR MERCHANT HOSTED */
 }
 
 
@@ -179,199 +191,28 @@ class FF_PaymentGateway_MerchantHosted extends FF_PaymentGateway {
 
 
 
-
 /**
- * Class for gateway results
+ * Parent class for all gateway-hosted gateways
  */
-class FF_PaymentGateway_Result {
-	
-    /* Constants for gateway result status */
-    const SUCCESS    = 'Success';
-    const FAILURE    = 'Failure';
-    const INCOMPLETE = 'Incomplete';
-
+abstract class FF_PaymentGateway_GatewayHosted extends FF_PaymentGateway {
+    
     /**
-     * Status of the payment being processed
+     * The link to return to after processing payment (for gateway-hosted payments only)
      *
      * @var String
      */
-    protected $status;
+    protected $returnURL;
 
     /**
-     * Array of errors raised by the gateway
-     * array(ErrorCode => ErrorMessage)
+     * The link to return to after cancelling payment (for gateway-hosted payments only)
      *
-     * @var array
+     * @var String
      */
-    protected $errors = array();
-
+    protected $cancelURL;
+            
     
-    /**
-     * The HTTP response object passed back from the gateway
-     *
-     * @var SS_HTTPResponse
-     */
-    protected $HTTPResponse;
-
-    /**
-     * @param String $status
-     * @param SS_HTTPResponse $response
-     * @param Array $errors
-     */
-    public function __construct($status, $response = null, $errors = null) {
-
-        if (!$response) {
-            $response = new SS_HTTPResponse('', 200);
-        }
-
-        $this->HTTPResponse = $response;
-        $this->setStatus($status);
-
-        if ($errors) {
-            $this->setErrors($errors);
-        }
-    }
-
     
-    /**
-     * Set the payment result status.
-     *
-     * @param String $status
-     * @throws Exception when status is invalid
-     */
-    public function setStatus($status) {
-        if ($status == self::SUCCESS || $status == self::FAILURE || $status == self::INCOMPLETE) {
-            $this->status = $status;
-        } else {
-            throw new Exception("Result status invalid");
-        }
-    }
-
-    /**
-     * Get status of this result
-     * 
-     * @return String
-     */
-    public function getStatus() {
-        return $this->status;
-    }
-
-    /**
-     * Get HTTP Response
-     * 
-     * @return SS_HTTPResponse
-     */
-    public function getHTTPResponse() {
-        return $this->HTTPResponse;
-    }
-
-    /**
-     * Set the gateway errors
-     *
-     * @param array $errors
-     */
-    public function setErrors($errors) {
-
-        if (is_string($errors)) {
-            $errors = array($errors);
-        }
-
-        if (is_array($errors)) {
-            $this->errors = $errors;
-        } else {
-            throw new Exception("Gateway errors must be array");
-        }
-        
-    }
-
-    
-    /**
-     * Add an error to the error list
-     *
-     * @param String $message: The error message
-     * @param String $code: The error code
-     */
-    public function addError($message, $code = null) {
-        
-        if ($code) {
-            if (array_key_exists($code, $this->errors)) {
-                throw new Exception("Error code already exists");
-            } else {
-                $this->errors[$code] = $message;
-            }
-        } else {
-            array_push($this->errors, $message);
-        }
-        
-    }
-
-    /**
-     * Get errors
-     * 
-     * @return Array
-     */
-    public function getErrors() {
-        return $this->errors;
-    }
-
-    /**
-     * Returns true if successful
-     * 
-     * @return Boolean
-     */
-    public function isSuccess() {
-        return $this->status == self::SUCCESS;
-    }
-
-    /**
-     * Returns true if failure
-     * 
-     * @return Boolean
-     */
-    public function isFailure() {
-        return $this->status == self::FAILURE;
-    }
-
-    /**
-     * Returns true if incomplete
-     * 
-     * @return Boolean
-     */
-    public function isIncomplete() {
-        return $this->status == self::INCOMPLETE;
-    }
-
-}
-
-/**
- * Wrapper class for 'success' result
- */
-class FF_PaymentGateway_Success extends FF_PaymentGateway_Result {
-
-    public function __construct() {
-        parent::__construct(FF_PaymentGateway_Result::SUCCESS);
-    }
+     
     
 }
 
-/**
- * Wrapper class for 'failure' result
- */
-class FF_PaymentGateway_Failure extends FF_PaymentGateway_Result {
-
-    public function __construct($response = null, $errors = null) {
-        parent::__construct(FF_PaymentGateway_Result::FAILURE, $response, $errors);
-    }
-    
-}
-
-/**
- * Wrapper class for 'incomplete' result
- */
-class FF_PaymentGateway_Incomplete extends FF_PaymentGateway_Result {
-
-    public function __construct($response = null, $errors = null) {
-        parent::__construct(FF_PaymentGateway_Result::INCOMPLETE, $response, $errors);
-    }
-    
-}
