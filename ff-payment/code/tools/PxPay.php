@@ -138,6 +138,8 @@ class PxPay_Curl
 		$request->setKey($this->PxPay_Key);
 		
 		$xml = $request->toXml();
+                
+                //Debug::show($xml);die;
 		
 		$result = $this->submitXml($xml);
   
@@ -316,26 +318,37 @@ class PxPayLookupRequest extends PxPayMessage
 
 #******************************************************************************
 class PxPayMessage {
-	var $TxnType;
-	var $CurrencyInput;
-  	var $TxnData1;
-  	var $TxnData2;
-  	var $TxnData3;
-  	var $MerchantReference;
-  	var $EmailAddress;
-  	var $BillingId;
-	var $TxnId;
+    var $TxnType;
+    var $CurrencyInput;
+    var $TxnData1;
+    var $TxnData2;
+    var $TxnData3;
+    var $MerchantReference;
+    var $EmailAddress;
+    var $BillingId;
+    var $DpsBillingId;
+    var $TxnId;
 	
-	function PxPayMessage(){
-	
-	}
+    function PxPayMessage(){
 
-	function setBillingId($BillingId){
-		$this->BillingId = $BillingId;
-	}
-	function getBillingId(){
-		return $this->BillingId;
-	}
+    }
+
+    function setBillingId($BillingId){
+            $this->BillingId = $BillingId;
+    }
+    function getBillingId(){
+            return $this->BillingId;
+    }
+    
+    //To setup DPS billing Id
+    function setDpsBillingId($dpsBillingId){
+        $this->DpsBillingId = $dpsBillingId;
+    }
+    
+    function getDpsBillingId(){
+        return $this->DpsBillingId;
+    }
+    
 	function setTxnType($TxnType){
 		$this->TxnType = $TxnType;
 	}
@@ -386,16 +399,16 @@ class PxPayMessage {
 		return $this->TxnId;
 	}
 	
-	function toXml(){
-		$arr = get_object_vars($this);
+    function toXml(){
+        $arr = get_object_vars($this);
 
-		$xml  = "<GenerateRequest>";
-    	while (list($prop, $val) = each($arr))
-        	$xml .= "<$prop>$val</$prop>" ;
+        $xml  = "<GenerateRequest>";
+        while (list($prop, $val) = each($arr))
+            $xml .= "<$prop>$val</$prop>" ;
 
-		$xml .= "</GenerateRequest>";
-		return $xml;
-	}
+        $xml .= "</GenerateRequest>";
+        return $xml;
+    }
 	
 	
 }

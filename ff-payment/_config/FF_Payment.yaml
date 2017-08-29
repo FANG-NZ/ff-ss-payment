@@ -2,9 +2,10 @@ name: FF_Payment
 ---
 
 # FF Payment controller
+# This is to redirect back url into Gateway Hosted controller
 Director:
   rules:
-    'payment//$Action/$MethodName/$PaymentID': 'PaymentProcessor_GatewayHosted'
+    'payment//$Action/$MethodName/$PaymentID': 'FF_PaymentProcessor_GatewayHosted'
 
 
 # FF Payment processor
@@ -60,6 +61,6 @@ FF_PaymentFactory:
             live: 'PoliPaymentGateway'
             dev:  'PoliPaymentGateway'
             test: 'PoliPaymentGateway'
-        processor: 'PaymentProcessor_GatewayHosted'
+        processor: 'FF_PaymentProcessor_GatewayHosted'
         model: 'FF_Payment'
         

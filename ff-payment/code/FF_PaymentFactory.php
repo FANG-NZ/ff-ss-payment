@@ -114,8 +114,7 @@ class FF_PaymentFactory {
             $processorClass = $methodConfig['processor'];
             $processor = new $processorClass();
             
-            
-            
+            //To setup vars for processor
             $processor->setMethodName($methodName);
             $processor->setPaymentGateway(self::get_gateway($methodName));
             $processor->setPayment(self::get_payment_model($methodName));

@@ -23,7 +23,7 @@ class FF_PaymentProcessor extends Controller {
     /**
      * The payment object to be injected to this controller
      *
-     * @var Payment
+     * @var FF_Payment
      */
     protected $payment;
 
@@ -80,6 +80,14 @@ class FF_PaymentProcessor extends Controller {
         $this->payment = $payment;
     }
     
+    /**
+     * Get the payment object from this processor
+     * @return type
+     */
+    public function getPayment(){
+        return $this->payment;
+    }
+    
     
     /**
      * Set the payment gateway object into this controller
@@ -115,13 +123,14 @@ class FF_PaymentProcessor extends Controller {
     
     /**
      * Save preliminary data to database before processing payment
+     * @param Array data The input array of data
+     * @return Payment object for payment
      */
     public function setup($data) {
         
         if(!$data || !is_array($data)){
             throw new Exception("Not correct data format! Required ARRAY of data");
         }
-        
         
         //To setup payment data
         $this->paymentData = $data;
@@ -134,6 +143,9 @@ class FF_PaymentProcessor extends Controller {
         $this->payment->Method = $this->methodName;
         
         $this->payment->write();
+        
+        //To return Payment dataobject
+        return $this->payment;
     }
     
     
@@ -147,11 +159,12 @@ class FF_PaymentProcessor extends Controller {
      * array('Amount' => 1.00, 'Currency' => 'USD', 'Reference' => 'Ref')
      *
      * @see paymentGateway::validate()
-     * @param Array $data Payment data
      */
-    public function capture($data) {
-        //To setup data
-        $this->setup($data);
+    public function capture() {
+        
+        if(!$this->paymentData || !is_array($this->paymentData)){
+            throw new Exception("Not setup payment data");
+        }
 
         // Validate the payment data
         $validation = $this->gateway->validate($this->paymentData);
@@ -191,12 +204,11 @@ class FF_PaymentProcessor_MerchantHosted extends FF_PaymentProcessor {
      *
      * @see PaymentProcessor::capture()
      */
-    public function capture($data) {
-        parent::capture($data);
+    public function capture() {
+        parent::capture();
 
-       
         //call gateway process
-        $result = $this->gateway->process($this->paymentData, $this->payment);
+        $result = $this->gateway->process($this->paymentData);
         //To update payment
         $this->payment->updateStatus($result);
 
@@ -230,10 +242,44 @@ class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
      *
      * @see PaymentProcessor::capture()
      */
-    public function capture($data) {
-        parent::capture($data);
+    public function capture() {
+        parent::capture();
         
-        Debug::show("I'm here");die;
+        // Set the return link
+        $complete_url = Director::absoluteURL(Controller::join_links(
+                        $this->Link(),
+                        'complete',
+                        $this->methodName,
+                        $this->payment->ID
+        ));
+        $this->gateway->setReturnURL($complete_url);
+
+        // Set the cancel link
+        $cancel_url = Director::absoluteURL(Controller::join_links(
+                        $this->Link(),
+                        'cancel',
+                        $this->methodName,
+                        $this->payment->ID
+        ));
+        $this->gateway->setCancelURL($cancel_url);
+        
+        
+        // Send a request to the gateway
+        $result = $this->gateway->process($this->paymentData);
+
+        // Processing may not get to here if all goes smoothly, customer will be at the 3rd party gateway
+        if ($result && !$result->isSuccess()) {
+
+            // Gateway did not respond or responded with error
+            // Need to save the gateway response and save HTTP Status, errors etc. to Payment
+            $this->payment->updateStatus($result);
+
+            // Payment has failed - redirect to confirmation page
+            // Developers can get the failure data from the database to show
+            // the proper errors to users
+            $this->doRedirect();
+        }
+        
     }
     
     
@@ -247,16 +293,37 @@ class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
      * @param SS_HTTPResponse $request
      */
     public function complete($request) {
+        
         // Reconstruct the payment object
-        $this->payment = Payment::get()->byID($request->param('OtherID'));
+        $this->payment = FF_Payment::get()->byID($request->param('OtherID'));
 
         // Reconstruct the gateway object
         $methodName = $request->param('ID');
-        $this->gateway = PaymentFactory::get_gateway($methodName);
+        $this->gateway = FF_PaymentFactory::get_gateway($methodName);
 
         // Query the gateway for the payment result
         $result = $this->gateway->check($request);
         $this->payment->updateStatus($result);
+
+        // Do redirection
+        $this->doRedirect();
+    }
+    
+    
+    /**
+     * Process request from the external gateway, this action is usually triggered if the payment was cancelled
+     * and the user was redirected to the cancelURL.
+     * 
+     * @param SS_HTTPResponse $request
+     */
+    public function cancel($request) {
+        
+        // Reconstruct the payment object
+        $this->payment = FF_Payment::get()->byID($request->param('OtherID'));
+
+        
+        // The payment result was a incomplete
+        $this->payment->updateStatus(new FF_PaymentGateway_Incomplete());
 
         // Do redirection
         $this->doRedirect();

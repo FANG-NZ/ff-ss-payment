@@ -52,10 +52,6 @@ class FF_PaymentGateway_Result {
 
 
 
-
-
-
-
     /**
      * @param String $status
      * @param SS_HTTPResponse $response
@@ -116,8 +112,8 @@ class FF_PaymentGateway_Result {
      * Get the response from Gateway
      * @return type
      */
-    public function getResponse(){
-        return $this->response;
+    public function getGatewayResponse(){
+        return $this->gateway_response;
     }
     
     

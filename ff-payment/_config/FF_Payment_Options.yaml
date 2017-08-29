@@ -19,3 +19,41 @@ PaymentExpressGateway_PxPost:
         authentication:
             user_name: 'InfoSiteLtd_Dev0451'
             password: 'test1234'
+            
+
+# DPS PxPay
+PaymentExpressGateway_PxPay:
+    
+    live:
+        authentication:
+            user_id: 'InfoSiteLtd1312'
+            key: '1qaz@WSX3edc'
+
+    test:
+        authentication:
+            user_id: 'InfoSiteLtd_Dev'
+            key: 'test12344'
+
+    dev:
+        url: 'https://uat.paymentexpress.com/pxaccess/pxpay.aspx'
+        authentication:
+            user_id: 'InfoSiteLtd_Dev'
+            key: a2afac739d111b64d979ee986aa7fa8f32732f84509e3aeb217cd36a4efae463
+  
+
+# Poli Payment
+PoliPaymentGateway:
+    live:
+        merchant_code: 'SS64005826'
+        authentication_code: 'qH3^pPfDTbMGL'
+
+    test:
+        merchant_code: 'SS64005826'
+        authentication_code: 'qH3^pPfDTbMGL'
+
+    dev:
+        base_url: 'https://poliapi.apac.paywithpoli.com/api/v2/Transaction/Initiate'
+        check_url: 'https://poliapi.apac.paywithpoli.com/api/v2/Transaction/GetTransaction'
+        authentication:
+            merchant_code: 'T6400483'
+            authentication_code: 'jq36czk!gQpAv'

@@ -64,48 +64,91 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
     }
     
     
+    //data structure
+    /**
+     * 
+     * PostUsername
+     * PostPassword
+     * 
+     * Amount
+     * Currency
+     * Reference
+     * Email
+     * 
+     * MonthExpiry
+     * YearExpiry
+     * 
+     * EnableRebilling
+     * BillingID
+     * DpsBillingID
+     */
+    
+    
     /**
      * OVERRIDE
      * @param type $data
      */
-    public function process($data, $payment) {
+    public function process($data) {
         $this->onBeforeProcess();
         
-        //clear data
-        //unset($data["Status"]);
-        //unset($data["CreditCardType"]);
         
         // Main Settings
-        //$inputs = array();
         $data['PostUsername'] = self::$pxpost_username;
         $data['PostPassword'] = self::$pxpost_password;
-        //$inputs = array();
+
+      
+        //To setup Month & Year
+        if(isset($data["MonthExpiry"]) && isset($data["YearExpiry"])){
+            $data["DateExpiry"] = $data["MonthExpiry"] . $data["YearExpiry"];
+        }
+        unset($data["MonthExpiry"]);
+        unset($data["YearExpiry"]);
         
-//        $data["CardHolderName"] = $data["LastName"] . " " . $data["FirstName"];
-//        unset($data["FirstName"]);
-//        unset($data["LastName"]);
-//        
-//        $data["DateExpiry"] = $data["MonthExpiry"] . $data["YearExpiry"];
-//        unset($data["MonthExpiry"]);
-//        unset($data["YearExpiry"]);
-        
+        //Add TxnType
         $data["TxnType"] = "Purchase";
+        
+        //To setup EnableAddBillCard
+        if(isset($data["EnableRebilling"])){
+            
+            if($data["EnableRebilling"] === TRUE){
+                $data["EnableAddBillCard"] = TRUE;
+            }
+            
+            unset($data["EnableRebilling"]);
+        }
+        
         
         // Transaction Creation
         $transaction = "<Txn>";
         foreach ($data as $name => $value) {
             
-//            if ($name == "Amount") {
-//                $value = number_format($value, 2, '.', '');
-//            }
-//            
-//            if($name == "Reference"){
-//                $name = "MerchantReference";
-//            }
-//            
-//            if($name == "Currency"){
-//                $name = "InputCurrency";
-//            }
+            if ($name == "Amount") {
+                $value = number_format($value, 2, '.', '');
+            }
+            
+            if($name == "CardName"){
+                $name = "CardHolderName";
+            }
+            
+            if($name == "SecurityCode"){
+                $name = "Cvc2";
+            }
+            
+            if($name == "Reference"){
+                $name = "MerchantReference";
+            }
+            
+            if($name == "Currency"){
+                $name = "InputCurrency";
+            }
+            
+            if($name == "BillingID"){
+                $name = "BillingId";
+            }
+            
+            if($name == "DpsBillingID"){
+                $name = "DpsBillingId";
+            }
             
             
             $XML_name = Convert::raw2xml($name);
@@ -118,7 +161,6 @@ class PaymentExpressGateway_PxPost extends FF_PaymentGateway_MerchantHosted {
         $resultXml = $this->post($transaction);
         //To get convert response
         $result = $this->parserXML($resultXml);
-        
         
         
         if ($result['SUCCESS']) {

@@ -173,7 +173,7 @@ abstract class FF_PaymentGateway {
      * @param Array $data
      * @return PaymentGateway_Result
      */
-    abstract public function process($data, $payment); 
+    abstract public function process($data); 
     
 }
 
@@ -211,8 +211,33 @@ abstract class FF_PaymentGateway_GatewayHosted extends FF_PaymentGateway {
     protected $cancelURL;
             
     
+    /**
+     * Function is to set return url
+     * @param type $url
+     */
+    public function setReturnURL($url){
+        $this->returnURL = $url;
+    }
     
+    /**
+     * Function is to set cancel url
+     * @param type $url
+     */
+    public function setCancelURL($url){
+        $this->cancelURL = $url;
+    }
      
+    /**
+     * Check the payment using gateway lookup API or request
+     * 
+     * TODO: Should this return PaymentGateway_Failure by default instead?
+     *
+     * @param SS_HTTPRequest $request
+     * @return PaymentGateway_Result
+     */
+    public function check(SS_HTTPRequest $request) {
+        return new FF_PaymentGateway_Success();
+    }
     
 }
 
