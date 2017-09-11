@@ -219,12 +219,20 @@ abstract class FF_PaymentGateway_GatewayHosted extends FF_PaymentGateway {
         $this->returnURL = $url;
     }
     
+    public function getReturnURL(){
+        return $this->returnURL;
+    }
+    
     /**
      * Function is to set cancel url
      * @param type $url
      */
     public function setCancelURL($url){
         $this->cancelURL = $url;
+    }
+    
+    public function getCancelURL(){
+        return $this->cancelURL;
     }
      
     /**

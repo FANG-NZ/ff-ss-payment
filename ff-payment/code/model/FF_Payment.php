@@ -72,7 +72,36 @@ class FF_Payment extends DataObject {
             $error->write();
         }
 
-        return $this->write();
+        //To write into database
+        $this->write();
+        
+        //To extend call back function
+        $this->extend("onUpdateStatus", $result);
+        
+        return $this;
+    }
+    
+    
+    /**
+     * Function is to check if payment is pending status
+     * @return boolean
+     */
+    public function isPending(){
+        if($this->Status == self::PENDING){
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Function is to check if payment has been paid
+     * @return boolean
+     */
+    public function isPaid(){
+        if($this->Status == self::SUCCESS){
+            return true;
+        }
+        return false;
     }
     
 }

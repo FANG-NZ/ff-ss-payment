@@ -106,7 +106,7 @@ class PaymentExpressGateway_PxPay extends FF_PaymentGateway_GatewayHosted {
         else{
             
             //To setup Enable rebilling function
-            if(isset($data['EnableRebilling'])){
+            if(isset($data['EnableRebilling']) && $data['EnableRebilling']){
                 $request->setEnableAddBillCard(TRUE);
             }
             
@@ -167,7 +167,7 @@ class PaymentExpressGateway_PxPay extends FF_PaymentGateway_GatewayHosted {
      * @param SS_HTTPRequest $request Request from the gateway - transaction response
      * @return PaymentGateway_Result
      */ 
-    public function check($request) {
+    public function check(SS_HTTPRequest $request) {
         $result = $request->getVar('result');
 
         //Construct the request to check the payment status
@@ -177,23 +177,53 @@ class PaymentExpressGateway_PxPay extends FF_PaymentGateway_GatewayHosted {
         //Get encrypted URL from DPS to redirect the user to
         $request_string = $this->makeProcessRequest($pxpay_request);
 
-        //Obtain output XML
-        $response = new MifMessage($request_string);
+        //To setup gateway response object
+        $response = new PaymentExpressGateway_PxPay_Response($request_string);
+        $success = $response->get("Success");
         
-        //Parse output XML
-        $success = $response->get_element_text('Success');
-
         //To check out response result
         if ($success && is_numeric($success) && $success > 0) {
-            return new FF_PaymentGateway_Success();
+            return new FF_PaymentGateway_Success($response);
         }
         else if (is_numeric($success) && $success == 0) {
-            return new FF_PaymentGateway_Failure();
+            return new FF_PaymentGateway_Failure($response);
         }
         else {
-            return new FF_PaymentGateway_Incomplete();
+            return new FF_PaymentGateway_Incomplete($response);
         }
     }
     
+}
+
+
+
+/**
+ * class object is to define PxPay response object
+ */
+class PaymentExpressGateway_PxPay_Response extends FF_PaymentGateway_Response{
+    
+    
+    /**
+     * OVERRIDE
+     * @param type $response
+     */
+    public function convert($response) {
+        $helper = new MifMessage($response);
+        
+        $data = array();
+        //To setup each element into array
+        $data['Success'] = $helper->get_element_text('Success');
+        $data['ResponseText'] = $helper->get_element_text('ResponseText');
+        $data['CardName'] = $helper->get_element_text('CardName');
+        $data['CardHolderName'] = $helper->get_element_text('CardHolderName');
+        $data['CardNumber'] = $helper->get_element_text('CardNumber');
+        $data['Amount'] = $helper->get_element_text('AmountSettlement');
+        $data['Currency'] = $helper->get_element_text('CurrencyInput');
+        
+        $data['EnableAddBillCard'] = $helper->get_element_text('EnableAddBillCard');
+        $data['DpsBillingId'] = $helper->get_element_text('DpsBillingId');
+        
+        return $data;
+    }
 
 }

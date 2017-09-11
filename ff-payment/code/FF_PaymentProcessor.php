@@ -186,7 +186,7 @@ class FF_PaymentProcessor extends Controller {
      * @return string
      */
     public function Link() {
-        return "payment";
+        return "ff-payment";
     }
     
 }
@@ -245,24 +245,8 @@ class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
     public function capture() {
         parent::capture();
         
-        // Set the return link
-        $complete_url = Director::absoluteURL(Controller::join_links(
-                        $this->Link(),
-                        'complete',
-                        $this->methodName,
-                        $this->payment->ID
-        ));
-        $this->gateway->setReturnURL($complete_url);
-
-        // Set the cancel link
-        $cancel_url = Director::absoluteURL(Controller::join_links(
-                        $this->Link(),
-                        'cancel',
-                        $this->methodName,
-                        $this->payment->ID
-        ));
-        $this->gateway->setCancelURL($cancel_url);
-        
+        // To call setup gateway
+        $this->setupGateway();
         
         // Send a request to the gateway
         $result = $this->gateway->process($this->paymentData);
@@ -283,7 +267,41 @@ class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
     }
     
     
-    
+    /**
+     * Function is to setup gateway 
+     */
+    protected function setupGateway(){
+        // Set the return link
+        $complete_url = Director::absoluteURL(Controller::join_links(
+                        $this->Link(),
+                        'complete',
+                        $this->methodName,
+                        $this->payment->ID
+        ));
+        $this->gateway->setReturnURL($complete_url);
+
+        // Set the cancel link
+        $cancel_url = Director::absoluteURL(Controller::join_links(
+                        $this->Link(),
+                        'cancel',
+                        $this->methodName,
+                        $this->payment->ID
+        ));
+        $this->gateway->setCancelURL($cancel_url);
+    }
+
+
+    /**
+     * Function is to get method name from request
+     * @param SS_HTTPRequest $request
+     */
+    protected function getMethodName(SS_HTTPRequest $request){
+        return $request->param("MethodName");
+    }
+
+
+
+
     /**
      * Process request from the external gateway, this action is usually triggered if the payment was completed on the gateway 
      * and the user was redirected to the returnURL.
@@ -292,13 +310,15 @@ class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
      *
      * @param SS_HTTPResponse $request
      */
-    public function complete($request) {
+    public function complete(SS_HTTPRequest $request) {
         
         // Reconstruct the payment object
-        $this->payment = FF_Payment::get()->byID($request->param('OtherID'));
+        $this->payment = FF_Payment::get()->byID($request->param('PaymentID'));
 
         // Reconstruct the gateway object
-        $methodName = $request->param('ID');
+        // get the method name
+        $methodName = $this->getMethodName($request);
+        // call factory to reconstruct payment gateway
         $this->gateway = FF_PaymentFactory::get_gateway($methodName);
 
         // Query the gateway for the payment result
@@ -319,7 +339,7 @@ class FF_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor {
     public function cancel($request) {
         
         // Reconstruct the payment object
-        $this->payment = FF_Payment::get()->byID($request->param('OtherID'));
+        $this->payment = FF_Payment::get()->byID($request->param('PaymentID'));
 
         
         // The payment result was a incomplete

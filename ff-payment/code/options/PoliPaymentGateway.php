@@ -31,6 +31,19 @@ class PoliPaymentGateway extends FF_PaymentGateway_GatewayHosted {
     );
     
     
+    //TODO
+    //define the notification url for polipay
+    private $notificationURL;
+    
+    public function setNotificationURL($url){
+        $this->notificationURL = $url;
+    }
+    
+    public function getNotificationURL(){
+        return $this->notificationURL;
+    }
+    
+    
 
 
 
@@ -97,7 +110,7 @@ class PoliPaymentGateway extends FF_PaymentGateway_GatewayHosted {
             'SuccessURL' => $this->returnURL,
             'CancellationURL' => $this->cancelURL,
             'FailureURL' => $this->returnURL,
-            'NotificationURL' => $this->returnURL
+            'NotificationURL' => $this->notificationURL
         );
         
         
@@ -148,10 +161,12 @@ class PoliPaymentGateway extends FF_PaymentGateway_GatewayHosted {
     
     
     /**
-     * OVERRIDE
-     * @param type $request
+     * Function is to do check nudge page
+     * @param SS_HTTPRequest $request
+     * @return \FF_PaymentGateway_Incomplete|\FF_PaymentGateway_Success
+     * @throws Exception
      */
-    public function check(SS_HTTPRequest $request) {
+    public function check_nudge(SS_HTTPRequest $request) {
         $token = $request->postVar("Token");
         if(is_null($token)){
             $token = $request->getVar("token");
@@ -193,8 +208,6 @@ class PoliPaymentGateway extends FF_PaymentGateway_GatewayHosted {
         //get result array
         $result = json_decode($response, true);
         
-        
-        
         //To check out response result
         if ($result['TransactionStatusCode'] == "Completed") {
             return new FF_PaymentGateway_Success($result);
@@ -209,4 +222,78 @@ class PoliPaymentGateway extends FF_PaymentGateway_GatewayHosted {
 
 
 
+/**
+ * TODO
+ * define the payment processor fpr PoliPay
+ * 
+ * http://www.ffpayment.local/payment/complete/PoliPayment/16?token=HeZp0uYuRDZWK7JojBU08Elc2TzdcMGB
+ */
+class PoliPay_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor_GatewayHosted{
+    
+    private static $allowed_actions = array(
+        'notify'
+    );
+    
+    
+    
+    /**
+     * OVERRIDE
+     */
+    protected function setupGateway() {
+        parent::setupGateway();
+        
+        //To set notification url
+        $notify_url = Director::absoluteURL(Controller::join_links(
+                        $this->Link(),
+                        'notify',
+                        $this->methodName,
+                        $this->payment->ID
+        ));
+        $this->gateway->setNotificationURL($notify_url);
+    }
 
+    
+    /**
+     * OVERRIDE
+     * @param \SS_HTTPRequest $request
+     * @return string
+     */
+    protected function getMethodName(\SS_HTTPRequest $request) {
+        return "PoliPayment";
+    }
+
+
+
+
+    /**
+     * http://www.ffpayment.local/ff-payment/notify/PoliPayment/2?token=8lS%2fDlT10K2jbqS1tOv%2fgW0%2bNf4ZLTJG
+     * Function is to handle notify callback
+     * @param SS_HTTPRequest $request
+     */
+    public function notify(SS_HTTPRequest $request){
+        
+        // Reconstruct the payment object
+        $this->payment = FF_Payment::get()->byID($request->param('PaymentID'));
+        
+        //To check payment status
+//        if(!$this->payment->isPending()){
+//            //If payment is NOT pending, we do NOTHING here
+//            die;
+//        }
+        
+
+        // Reconstruct the gateway object
+        // get the method name
+        $methodName = $this->getMethodName($request);
+        // call factory to reconstruct payment gateway
+        $this->gateway = FF_PaymentFactory::get_gateway($methodName);
+
+        // Query the gateway for the payment result
+        //$result = $this->gateway->check_nudge($request);
+        $result = new FF_PaymentGateway_Success();
+        //To update payment
+        $this->payment->updateStatus($result);
+        
+    }
+    
+}
