@@ -5,6 +5,7 @@ name: FF_Payment
 # This is to redirect back url into Gateway Hosted controller
 Director:
     rules:
+        'ff-payment/PayPal//$Action/$PaymentID' : 'FF_PaymentProcessor_PayPal'
         'ff-payment//$Action/PoliPayment/$PaymentID' : 'PoliPay_PaymentProcessor_GatewayHosted'
         'ff-payment//$Action/$MethodName/$PaymentID': 'FF_PaymentProcessor_GatewayHosted'
 
@@ -17,6 +18,7 @@ FF_PaymentProcessor:
             - 'PaymentExpressPxPay'
             - 'PaymentExpressPxPost'
             - 'PoliPayment'
+            - 'PayPal'
         test:
             - 'PaymentExpressPxPay'
             - 'PaymentExpressPxPost'
@@ -66,3 +68,11 @@ FF_PaymentFactory:
         processor: 'PoliPay_PaymentProcessor_GatewayHosted'
         model: 'FF_Payment'
         
+    # method 4
+    PayPal:
+        title: 'PayPal Payment'
+        gateway_classes:
+            dev: 'PayPalGateway'
+        
+        processor: 'FF_PaymentProcessor_PayPal'
+        model: 'FF_Payment'

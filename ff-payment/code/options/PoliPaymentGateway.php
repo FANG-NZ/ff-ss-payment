@@ -276,10 +276,10 @@ class PoliPay_PaymentProcessor_GatewayHosted extends FF_PaymentProcessor_Gateway
         $this->payment = FF_Payment::get()->byID($request->param('PaymentID'));
         
         //To check payment status
-//        if(!$this->payment->isPending()){
-//            //If payment is NOT pending, we do NOTHING here
-//            die;
-//        }
+        if(!$this->payment->isPending()){
+            //If payment is NOT pending, we do NOTHING here
+            die;
+        }
         
 
         // Reconstruct the gateway object

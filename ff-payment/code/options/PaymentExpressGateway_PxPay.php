@@ -212,16 +212,16 @@ class PaymentExpressGateway_PxPay_Response extends FF_PaymentGateway_Response{
         
         $data = array();
         //To setup each element into array
-        $data['Success'] = $helper->get_element_text('Success');
-        $data['ResponseText'] = $helper->get_element_text('ResponseText');
-        $data['CardName'] = $helper->get_element_text('CardName');
+        $data['Success'] =        $helper->get_element_text('Success');
+        $data['ResponseText'] =   $helper->get_element_text('ResponseText');
+        $data['CardName'] =       $helper->get_element_text('CardName');
         $data['CardHolderName'] = $helper->get_element_text('CardHolderName');
-        $data['CardNumber'] = $helper->get_element_text('CardNumber');
-        $data['Amount'] = $helper->get_element_text('AmountSettlement');
-        $data['Currency'] = $helper->get_element_text('CurrencyInput');
+        $data['CardNumber'] =     $helper->get_element_text('CardNumber');
+        $data['Amount'] =         $helper->get_element_text('AmountSettlement');
+        $data['Currency'] =       $helper->get_element_text('CurrencyInput');
         
         $data['EnableAddBillCard'] = $helper->get_element_text('EnableAddBillCard');
-        $data['DpsBillingId'] = $helper->get_element_text('DpsBillingId');
+        $data['DpsBillingId'] =      $helper->get_element_text('DpsBillingId');
         
         return $data;
     }

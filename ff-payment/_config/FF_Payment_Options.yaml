@@ -57,3 +57,18 @@ PoliPaymentGateway:
         authentication:
             merchant_code: 'T6400483'
             authentication_code: 'jq36czk!gQpAv'
+            
+# PayPalGateway
+PayPalGateway:
+    live:
+        
+    test:
+        
+    dev:
+        access_token_url: 'https://api.sandbox.paypal.com/v1/oauth2/token'
+        payment_url: 'https://api.sandbox.paypal.com/v1/payments/payment'
+        
+        authentication:
+            client_id: 'AVGZjz0vmhQOe-PBpvQpCmenwu82xuAxOjuxv625XVQltLZ_w4b34O7BhGwv6wG9vVqb_hI538SfTE7P'
+            secret: 'ECwrUxozHtahLI4lXGSQfwDVihPtqEkksUjSU52vdq2oH4DJUfR0whUJzWw9Ryn6ZXMmjKeQlQs1por7'
+        

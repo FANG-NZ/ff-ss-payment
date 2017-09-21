@@ -135,6 +135,7 @@ class FF_PaymentProcessor extends Controller {
         //To setup payment data
         $this->paymentData = $data;
 
+        
         //To setup payment dataobject
         $this->payment->Amount->Amount = $this->paymentData['Amount'];
         $this->payment->Amount->Currency = $this->paymentData['Currency'];
