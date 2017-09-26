@@ -5,7 +5,7 @@ name: FF_Payment
 # This is to redirect back url into Gateway Hosted controller
 Director:
     rules:
-        'ff-payment/PayPal//$Action/$PaymentID' : 'FF_PaymentProcessor_PayPal'
+        'ff-payment//$Action/PayPal/$PaymentID' : 'FF_PaymentProcessor_PayPal'
         'ff-payment//$Action/PoliPayment/$PaymentID' : 'PoliPay_PaymentProcessor_GatewayHosted'
         'ff-payment//$Action/$MethodName/$PaymentID': 'FF_PaymentProcessor_GatewayHosted'
 

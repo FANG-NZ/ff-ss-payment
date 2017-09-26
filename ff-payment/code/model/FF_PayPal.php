@@ -14,8 +14,9 @@
 class FF_PayPal extends DataObject {
     
     private static $db = array(
-        "Token" => "Varchar(300)",
-        "Expires" => "SS_Datetime"
+        "Token" =>         "Varchar(300)",
+        "ExpiresIn" =>     "Int",
+        "LastUpdatedOn" => "SS_Datetime"
     );
     
     
