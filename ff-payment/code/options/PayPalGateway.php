@@ -244,7 +244,7 @@ class PayPalGateway extends FF_PaymentGateway_GatewayHosted {
 
         //To make request call
         $response = curl_exec($ch);
-        $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        //$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
         //To close curl
         curl_close($ch);
